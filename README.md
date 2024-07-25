@@ -1,6 +1,10 @@
 # bleak_python_ble
 Bluetooth Low Energy using bleak
 
+# Introduction
+
+Warning: Do not name your script bleak.py! It will cause a circular import error
+
 # Python Virtual Environment
 
 ## Activating the Virtual Environment

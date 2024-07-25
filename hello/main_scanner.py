@@ -14,16 +14,17 @@ async def main():
     devices = await BleakScanner.discover()
     
     target_ble_device = None
+    alert_level_bleak_GATT_Characteristic = None
     
     # https://bleak.readthedocs.io/en/latest/api/index.html#bleak.backends.device.BLEDevice
-    for idx, ble_device in enumerate(devices):
+    for device_idx, ble_device in enumerate(devices):
         
         # DEBUG
         print("")
         print(ble_device)
         
-        print(idx, ") BLE Device.address:", ble_device.address)
-        print(idx, ") BLE Device.name:", ble_device.name)
+        print(device_idx+1, ") BLE Device.address:", ble_device.address)
+        print(device_idx+1, ") BLE Device.name:", ble_device.name)
         
         print(type(ble_device.name))
         
@@ -68,5 +69,46 @@ async def main():
                 
                 # https://bleak.readthedocs.io/en/latest/api/index.html#bleak.backends.service.BleakGATTService
                 print(bleak_GATT_service.description)
+                
+                # https://bleak.readthedocs.io/en/latest/api/index.html#bleak.backends.characteristic.BleakGATTCharacteristic
+                bleak_GATT_service_characteristics = bleak_GATT_service.characteristics
+                for characteristic_idx, bleak_GATT_Characteristic in enumerate(bleak_GATT_service_characteristics):
+                    print("    ", characteristic_idx+1, ")", "Handle:", bleak_GATT_Characteristic.handle, "Description: ", bleak_GATT_Characteristic)
+                    
+                    if bleak_GATT_Characteristic.handle == 11:
+                        alert_level_bleak_GATT_Characteristic = bleak_GATT_Characteristic
+                    
         
+                if alert_level_bleak_GATT_Characteristic is not None:
+                    print("")
+                    print("target characteristic (Alert Level) found!")
+                    
+                    print("char descriptors ...")
+                    for char_descriptor_idx, char_descriptor in enumerate(alert_level_bleak_GATT_Characteristic.descriptors):
+                        print(char_descriptor_idx, ")", char_descriptor)
+                    print("char descriptors done.")
+                    
+                    MY_CHARACTERISTIC_UUID = "00002a06-0000-1000-8000-00805f9b34fb"
+                    for x in range(3):
+                        
+                        # USER LED1 will blink
+                        print("Alert Level 1")
+                        await client.write_gatt_char(alert_level_bleak_GATT_Characteristic, b'\x01', response=False)
+                        await asyncio.sleep(5)
+                        
+                        # USER LED1 constantly on
+                        print("Alert Level 2")
+                        await client.write_gatt_char(alert_level_bleak_GATT_Characteristic, b'\x02', response=False)
+                        await asyncio.sleep(5)
+                        
+                        # USER LED1 off
+                        print("Alert Level 0")
+                        await client.write_gatt_char(alert_level_bleak_GATT_Characteristic, b'\x00', response=False)
+                        await asyncio.sleep(5)
+                    
+            await client.disconnect()
+        
+        
+        
+                    
 asyncio.run(main())
